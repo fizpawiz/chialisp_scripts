@@ -110,6 +110,6 @@ In the `example/` directory there is a module `add.clsp`.  If you change to that
 `mod_compile.sh add.clsp`  
 `mod_test.sh add.clsp test1` (run one test)  
 `mod_test.sh add.clsp` (run all tests)  
-`mod_debug.sh add.clsp test2` 
+`mod_debug.sh add.clsp test2`  
 `mod_clean.sh add.clsp`
 
