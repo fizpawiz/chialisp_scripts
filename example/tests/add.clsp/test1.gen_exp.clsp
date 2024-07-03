@@ -1,0 +1,5 @@
+(mod ()
+  ; this will output '4000' (notice no parentheses), which is 
+  ; the expected output of this puzzle in this test case
+  (q . 4000)
+)

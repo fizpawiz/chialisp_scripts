@@ -1,0 +1,4 @@
+(mod ()
+  ; this will output '(1000)', which will be curried into the target puzzle
+  (list 1000)
+)

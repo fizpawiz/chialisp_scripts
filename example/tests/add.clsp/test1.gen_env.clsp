@@ -1,0 +1,4 @@
+(mod ()
+  ; this will output '(3000)', which will be passed as the environment / solution to the puzzle
+  (list 3000)
+)

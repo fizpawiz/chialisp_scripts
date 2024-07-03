@@ -1,0 +1,133 @@
+#!/bin/bash
+
+if [ "$#" -eq 0 ] || [ "$1" = "--help" ]
+then 
+	echo "mod_test <xyz>.clsp [testname]"
+	echo "omit <testname> to run all tests"
+	echo ""
+	echo "Files in ./tests/<xyz>.clsp/ for each test:"
+	echo "  <testname>.curry (optional)"
+	echo "  <testname>.env (environment/solution)"
+	echo "  <testname>.expected (expected output)"
+	echo "Each of these files can be generated with:"
+	echo "  <testname>.gen_cur.clsp"
+	echo "  <testname>.gen_env.clsp"
+	echo "  <testname>.gen_exp.clsp"
+	echo ""
+	exit 1
+fi
+
+CLSP=$(basename $1)
+DIR=$(dirname $1)
+OUTDIR=$DIR/output
+
+if [ ! -f "$DIR/$CLSP" ]
+then
+        echo $DIR/$CLSP: file not found
+        exit 1
+fi
+
+if [ ! -f "$OUTDIR/$CLSP.clvm" ]
+then
+	echo $OUTDIR/$CLSP.clvm: file not found
+	echo Run mod_compile to generate this file
+	exit 1
+fi
+
+TESTS= 
+if [ "$#" -eq 2 ]
+then
+	TESTS=$2
+else
+	for filename in $(find "$DIR/tests/$CLSP" -maxdepth 1 -name "*.expected")
+	do
+		TESTS="$TESTS $(basename -s .expected $filename)"
+    	done
+	for filename in $(find "$DIR/tests/$CLSP" -maxdepth 1 -name "*.gen_exp.clsp")
+	do
+		TESTS="$TESTS $(basename -s .gen_exp.clsp $filename)"
+	done
+fi
+
+if [ ! -d "$OUTDIR" ]; then mkdir "$OUTDIR"; fi
+
+EXECUTED=0
+FAILED=0
+for t in $TESTS 
+do
+	BRUN_TARGET=""
+	if [ -f "$DIR/tests/$CLSP/$t.curry" ]
+	then
+		~/.cargo/bin/curry "$(cat $OUTDIR/$CLSP.clvm)" "$(cat $DIR/tests/$CLSP/$t.curry)" > "$OUTDIR/$CLSP.$t.curried"
+		~/.cargo/bin/opc "$OUTDIR/$CLSP.$t.curried" > "$OUTDIR/$CLSP.$t.curried.hex"
+		BRUN_TARGET="$OUTDIR/$CLSP.$t.curried"
+	elif [ -f "$DIR/tests/$CLSP/$t.gen_cur.clsp" ]
+	then
+		~/.cargo/bin/run "$DIR/tests/$CLSP/$t.gen_cur.clsp" > "$OUTDIR/$CLSP.$t.gen_cur.clsp.clvm"
+		if [ "$(head -c 4 "$OUTDIR/$CLSP.$t.gen_cur.clsp.clvm")" = "FAIL" ]
+		then
+			echo "Compilation error on curry generator:"
+			cat "$OUTDIR/$CLSP.$t.gen_cur.clsp.clvm"
+			exit 1
+		fi
+		~/.cargo/bin/brun "$OUTDIR/$CLSP.$t.gen_cur.clsp.clvm" > "$OUTDIR/$CLSP.$t.curry"
+		~/.cargo/bin/curry "$(cat $OUTDIR/$CLSP.clvm)" "$(cat $OUTDIR/$CLSP.$t.curry)" > "$OUTDIR/$CLSP.$t.curried"
+		~/.cargo/bin/opc "$OUTDIR/$CLSP.$t.curried" > "$OUTDIR/$CLSP.$t.curried.hex"
+		BRUN_TARGET="$OUTDIR/$CLSP.$t.curried"
+	else
+		BRUN_TARGET="$OUTDIR/$CLSP.clvm"
+	fi
+
+	BRUN_ENV=
+	if [ -f "$DIR/tests/$CLSP/$t.env" ]
+	then
+		~/.cargo/bin/opc "$DIR/tests/$CLSP/$t.env" > "$OUTDIR/$CLSP.$t.env.hex"
+		BRUN_ENV="$DIR/tests/$CLSP/$t.env"
+	elif [ -f "$DIR/tests/$CLSP/$t.gen_env.clsp" ]
+	then
+		~/.cargo/bin/run "$DIR/tests/$CLSP/$t.gen_env.clsp" > "$OUTDIR/$CLSP.$t.gen_env.clsp.clvm"
+		if [ "$(head -c 4 "$OUTDIR/$CLSP.$t.gen_env.clsp.clvm")" = "FAIL" ]
+		then
+			echo "Compilation error on environment generator:"
+			cat "$OUTDIR/$CLSP.$t.gen_env.clsp.clvm"
+			exit 1
+		fi
+		~/.cargo/bin/brun "$OUTDIR/$CLSP.$t.gen_env.clsp.clvm" > "$OUTDIR/$CLSP.$t.env"
+		~/.cargo/bin/opc "$OUTDIR/$CLSP.$t.env" > "$OUTDIR/$CLSP.$t.env.hex"
+		BRUN_ENV="$OUTDIR/$CLSP.$t.env"
+	else
+		BRUN_ENV="()"
+	fi
+
+	EXP_FILE=
+	if [ -f "$DIR/tests/$CLSP/$t.expected" ]
+	then
+		EXP_FILE="$DIR/tests/$CLSP/$t.expected"
+	elif [ -f "$DIR/tests/$CLSP/$t.gen_exp.clsp" ]
+	then
+		~/.cargo/bin/run "$DIR/tests/$CLSP/$t.gen_exp.clsp" > "$OUTDIR/$CLSP.$t.gen_exp.clsp.clvm"
+		if [ "$(head -c 4 "$OUTDIR/$CLSP.$t.gen_exp.clsp.clvm")" = "FAIL" ]
+		then
+			echo "Compliation error on expected file generator:"
+			cat "$OUTDIR/$CLSP.$t.gen_exp.clsp.clvm"
+			exit 1
+		fi
+		~/.cargo/bin/brun "$OUTDIR/$CLSP.$t.gen_exp.clsp.clvm" > "$OUTDIR/$CLSP.$t.expected"
+		EXP_FILE="$OUTDIR/$CLSP.$t.expected"
+	else
+		echo "Error: missing .expected file"
+		exit 1
+	fi
+
+	~/.cargo/bin/brun "$BRUN_TARGET" "$BRUN_ENV" > "$OUTDIR/$CLSP.$t.out"
+	((EXECUTED+=1))
+
+	diff -q "$OUTDIR/$CLSP.$t.out" "$EXP_FILE" > /dev/null
+	if [ $? -eq 1 ] 
+	then 
+		echo Error in test: $t
+		((FAILED+=1))
+	fi
+done
+echo Tests executed: $EXECUTED, failures: $FAILED
+

@@ -1,0 +1,8 @@
+(mod (VAL1 val2)
+
+  (include *standard-cl-23*)
+  (defun print (l x) (i (all "$print$" l x) x x))
+  
+  (+ (print (list "VAL1:") VAL1) (print (list "val2") val2))
+)
+
