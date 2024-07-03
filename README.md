@@ -1,7 +1,5 @@
 # Chialisp Workflow
 
-#### Updated to include debugging process
-
 I didn't find a good description of a workflow for writing Chialisp, so I created one.  I think it is going to work for me, 
 and I'm posting it here in case it is of benefit to others.  The key thing is that I want to have a collection of tests 
 that I can run over and over again during development to make sure I don't break anything that had previously been working.
@@ -54,6 +52,7 @@ These generator scripts are normal Chialisp module files that do not accept an e
 (mod ()
   ; generator code here
 )
+```
 
 The script can optionally run a single test if given a testname, or will run all tests for a particular sourcefile if 
 the testname is omitted.  That way, you can quickly run the entire suite of tests for a sourcefile.
