@@ -21,30 +21,17 @@ then
 	mkdir "$OUTDIR"
 fi
 
-if [ "$DIR/$CLSP" -nt "$OUTDIR/$CLSP.clvm" ]
+~/.cargo/bin/run -O -i "$DIR/include/" -i "$OUTDIR/" "$DIR/$CLSP" > "$OUTDIR/$CLSP.clvm"
+if [ "$(head -c 1 "$OUTDIR/$CLSP.clvm")" != "(" ]
 then
-	~/.cargo/bin/run -O -i "$DIR/include/" -i "$OUTDIR/" "$DIR/$CLSP" > "$OUTDIR/$CLSP.clvm"
-	if [ "$(head -c 4 "$OUTDIR/$CLSP.clvm")" = "FAIL" ]
-	then
-		echo "Compilation error:"
-		cat "$OUTDIR/$CLSP.clvm"
-		exit 1
-	fi
+	echo "Compilation error:"
+	cat "$OUTDIR/$CLSP.clvm"
+	echo ""
+	exit 1
 fi
 
-if [ "$OUTDIR/$CLSP.clvm" -nt "$OUTDIR/$CLSP.hex" ]
-then
-	~/.cargo/bin/opc "$OUTDIR/$CLSP.clvm" > "$OUTDIR/$CLSP.hex"
-fi
-
-if [ "$OUTDIR/$CLSP.clvm" -nt "$OUTDIR/$CLSP.hash" ]
-then
-	~/.cargo/bin/opc -H "$OUTDIR/$CLSP.clvm" > "$OUTDIR/$CLSP.hash"
-fi
-
-if [ "$OUTDIR/$CLSP.hash" -nt "$OUTDIR/$CLSP.hash.bin" ]
-then
-	xxd -r -p "$OUTDIR/$CLSP.hash" "$OUTDIR/$CLSP.hash.bin"
-fi
+~/.cargo/bin/opc "$OUTDIR/$CLSP.clvm" > "$OUTDIR/$CLSP.hex"
+~/.cargo/bin/opc -H "$OUTDIR/$CLSP.clvm" > "$OUTDIR/$CLSP.hash"
+xxd -r -p "$OUTDIR/$CLSP.hash" "$OUTDIR/$CLSP.hash.bin"
 
 echo Success!

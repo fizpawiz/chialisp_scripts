@@ -63,11 +63,12 @@ do
 		BRUN_TARGET="$OUTDIR/$CLSP.$t.curried"
 	elif [ -f "$DIR/tests/$CLSP/$t.gen_cur.clsp" ]
 	then
-		~/.cargo/bin/run "$DIR/tests/$CLSP/$t.gen_cur.clsp" > "$OUTDIR/$CLSP.$t.gen_cur.clsp.clvm"
-		if [ "$(head -c 4 "$OUTDIR/$CLSP.$t.gen_cur.clsp.clvm")" = "FAIL" ]
+		~/.cargo/bin/run -i "$DIR/include" -i "$DIR/tests/$CLSP" -i "$OUTDIR" "$DIR/tests/$CLSP/$t.gen_cur.clsp" > "$OUTDIR/$CLSP.$t.gen_cur.clsp.clvm"
+		if [ "$(head -c 1 "$OUTDIR/$CLSP.$t.gen_cur.clsp.clvm")" != "(" ]
 		then
 			echo "Compilation error on curry generator:"
 			cat "$OUTDIR/$CLSP.$t.gen_cur.clsp.clvm"
+			echo ""
 			exit 1
 		fi
 		~/.cargo/bin/brun "$OUTDIR/$CLSP.$t.gen_cur.clsp.clvm" > "$OUTDIR/$CLSP.$t.curry"
@@ -85,11 +86,12 @@ do
 		BRUN_ENV="$DIR/tests/$CLSP/$t.env"
 	elif [ -f "$DIR/tests/$CLSP/$t.gen_env.clsp" ]
 	then
-		~/.cargo/bin/run "$DIR/tests/$CLSP/$t.gen_env.clsp" > "$OUTDIR/$CLSP.$t.gen_env.clsp.clvm"
-		if [ "$(head -c 4 "$OUTDIR/$CLSP.$t.gen_env.clsp.clvm")" = "FAIL" ]
+		~/.cargo/bin/run -i "$DIR/include" -i "$DIR/tests/$CLSP" -i "$OUTDIR" "$DIR/tests/$CLSP/$t.gen_env.clsp" > "$OUTDIR/$CLSP.$t.gen_env.clsp.clvm"
+		if [ "$(head -c 1 "$OUTDIR/$CLSP.$t.gen_env.clsp.clvm")" != "(" ]
 		then
 			echo "Compilation error on environment generator:"
 			cat "$OUTDIR/$CLSP.$t.gen_env.clsp.clvm"
+			echo ""
 			exit 1
 		fi
 		~/.cargo/bin/brun "$OUTDIR/$CLSP.$t.gen_env.clsp.clvm" > "$OUTDIR/$CLSP.$t.env"
@@ -105,11 +107,12 @@ do
 		EXP_FILE="$DIR/tests/$CLSP/$t.expected"
 	elif [ -f "$DIR/tests/$CLSP/$t.gen_exp.clsp" ]
 	then
-		~/.cargo/bin/run "$DIR/tests/$CLSP/$t.gen_exp.clsp" > "$OUTDIR/$CLSP.$t.gen_exp.clsp.clvm"
-		if [ "$(head -c 4 "$OUTDIR/$CLSP.$t.gen_exp.clsp.clvm")" = "FAIL" ]
+		~/.cargo/bin/run -i "$DIR/include" -i "$DIR/tests/$CLSP" -i "$OUTDIR" "$DIR/tests/$CLSP/$t.gen_exp.clsp" > "$OUTDIR/$CLSP.$t.gen_exp.clsp.clvm"
+		if [ "$(head -c 1 "$OUTDIR/$CLSP.$t.gen_exp.clsp.clvm")" != "(" ]
 		then
 			echo "Compliation error on expected file generator:"
 			cat "$OUTDIR/$CLSP.$t.gen_exp.clsp.clvm"
+			echo ""
 			exit 1
 		fi
 		~/.cargo/bin/brun "$OUTDIR/$CLSP.$t.gen_exp.clsp.clvm" > "$OUTDIR/$CLSP.$t.expected"

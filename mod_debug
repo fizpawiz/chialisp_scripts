@@ -52,11 +52,12 @@ then
 	CLDB_TARGET="$OUTDIR/$CLSP.$TEST.curried.hex"
 elif [ -f "$DIR/tests/$CLSP/$TEST.gen_cur.clsp" ]
 then
-	~/.cargo/bin/run "$DIR/tests/$CLSP/$TEST.gen_cur.clsp" > "$OUTDIR/$CLSP.$TEST.gen_cur.clsp.clvm"
-	if [ "$(head -c 4 "$OUTDIR/$CLSP.$TEST.gen_cur.clsp.clvm")" = "FAIL" ]
+	~/.cargo/bin/run -i "$DIR/include" -i "$DIR/tests/$CLSP" -i "$OUTDIR" "$DIR/tests/$CLSP/$TEST.gen_cur.clsp" > "$OUTDIR/$CLSP.$TEST.gen_cur.clsp.clvm"
+	if [ "$(head -c 1 "$OUTDIR/$CLSP.$TEST.gen_cur.clsp.clvm")" != "(" ]
 	then
 		echo "Compilation error on curry generator:"
 		cat "$OUTDIR/$CLSP.$TEST.gen_cur.clsp.clvm"
+		echo ""
 		exit 1
 	fi
 	~/.cargo/bin/opc "$OUTDIR/$CLSP.$TEST.gen_cur.clsp.clvm" > "$OUTDIR/$CLSP.$TEST.gen_cur.clsp.hex"
@@ -78,11 +79,12 @@ then
 	CLDB_ENV="$OUTDIR/$CLSP.$TEST.env.hex"
 elif [ -f "$DIR/tests/$CLSP/$TEST.gen_env.clsp" ]
 then
-	~/.cargo/bin/run "$DIR/tests/$CLSP/$TEST.gen_env.clsp" > "$OUTDIR/$CLSP.$TEST.gen_env.clsp.clvm"
-	if [ "$(head -c 4 "$OUTDIR/$CLSP.$TEST.gen_env.clsp.clvm")" = "FAIL" ]
+	~/.cargo/bin/run -i "$DIR/include" -i "$DIR/tests/$CLSP" -i "$OUTDIR" "$DIR/tests/$CLSP/$TEST.gen_env.clsp" > "$OUTDIR/$CLSP.$TEST.gen_env.clsp.clvm"
+	if [ "$(head -c 1 "$OUTDIR/$CLSP.$TEST.gen_env.clsp.clvm")" != "(" ]
 	then
 		echo "Compilation error on environment generator:"
 		cat "$OUTDIR/$CLSP.$TEST.gen_env.clsp.clvm"
+		echo ""
 		exit 1
 	fi
 	~/.cargo/bin/opc "$OUTDIR/$CLSP.$TEST.gen_env.clsp.clvm" > "$OUTDIR/$CLSP.$TEST.gen_env.clsp.hex"
@@ -100,11 +102,12 @@ then
 	EXP_FILE="$DIR/tests/$CLSP/$TEST.expected"
 elif [ -f "$DIR/tests/$CLSP/$TEST.gen_exp.clsp" ]
 then
-	~/.cargo/bin/run "$DIR/tests/$CLSP/$TEST.gen_exp.clsp" > "$OUTDIR/$CLSP.$TEST.gen_exp.clsp.clvm"
-	if [ "$(head -c 4 "$OUTDIR/$CLSP.$TEST.gen_exp.clsp.clvm")" = "FAIL" ]
+	~/.cargo/bin/run -i "$DIR/include" -i "$DIR/tests/$CLSP" -i "$OUTDIR" "$DIR/tests/$CLSP/$TEST.gen_exp.clsp" > "$OUTDIR/$CLSP.$TEST.gen_exp.clsp.clvm"
+	if [ "$(head -c 1 "$OUTDIR/$CLSP.$TEST.gen_exp.clsp.clvm")" != "(" ]
 	then
 		echo "Compliation error on expected file generator:"
 		cat "$OUTDIR/$CLSP.$TEST.gen_exp.clsp.clvm"
+		echo ""
 		exit 1
 	fi
 	~/.cargo/bin/opc "$OUTDIR/$CLSP.$TEST.gen_exp.clsp.clvm" > "$OUTDIR/$CLSP.$TEST.gen_exp.clsp.hex"
@@ -119,7 +122,7 @@ echo Expected Output:
 cat "$EXP_FILE"
 echo ""
 echo Debugger Output:
-echo ~/.cargo/bin/cldb -x -p "$CLDB_TARGET" "$CLDB_ENV"
-~/.cargo/bin/cldb -x -p "$CLDB_TARGET" "$CLDB_ENV" | tee "$OUTDIR/$CLSP.$TEST.out"
+echo ~/.cargo/bin/cldb -x -p -y "$DIR/main.sym" "$CLDB_TARGET" "$CLDB_ENV"
+~/.cargo/bin/cldb -x -p -y "$DIR/main.sym" "$CLDB_TARGET" "$CLDB_ENV" | tee "$OUTDIR/$CLSP.$TEST.out"
 
 
